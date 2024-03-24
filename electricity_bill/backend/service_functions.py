@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 
 from .. models import Bill, Meter, Role, Status, CustomUser, Receipt
 from django.contrib.auth import authenticate, login, logout
@@ -111,20 +111,27 @@ class MeterFxn:
                 'meter_no': meter_no
             }
             Meter.objects.create(**meter_info)
-            return {'message': 'meter number created successfully'}
+            return JsonResponse({'message': 'Meter created successfully','code': '201'})
         except Exception as ex:
-            print(ex)
-        return {'message': 'Invalid input'}
+
+            return JsonResponse({'error': 'Error occurred while creating meter','code': '500'})
 
     def meter_read(**kwargs):
         try:
-            meter_no = kwargs.get('meter_no')
+            meter_no = int(kwargs.get('meter_no'))
             meter = Meter.objects.get(meter_no=meter_no)
             if meter:
-                return {"message": meter}
+                data = {
+                    "customer": meter.customer.id_no,
+                    "meter_no": meter.meter_no,
+                    "installation_date": meter.installation_date
+                    }
+                return JsonResponse({'data': data, 'code': '200'})
+            else:
+                return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
             print(e)
-        return {'message': 'invalid input'}
+            return JsonResponse({'error': 'Error occurred while reading meter','code': '500'})
 
 
 class Billed:
@@ -133,7 +140,7 @@ class Billed:
         try:
             customer_id = kwargs.get('id_no')
             customer = CustomUser.objects.get(id_no=customer_id)
-            meter = Meter.objects.filter(customer=customer).first() # TODO: START HERE\
+            meter = Meter.objects.filter(customer=customer).first()
 
             if meter:
                 bill_info = {
@@ -147,19 +154,28 @@ class Billed:
                 bill = Bill.objects.create(**bill_info)
 
                 if not bill:
-                    return "Bill not created"
+                    return JsonResponse({'message': 'Bill not created', 'code': '404'})
 
-                return f"Bill: { bill } Created Successfully"
+                return JsonResponse({'message': 'Bill created successfully', 'code': '201'})
+            else:
+                return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
             print(e)
-        return {'message':'invalid'}
+            return JsonResponse({'error': 'Error occurred while creating bill', 'code': '500'})
 
     def read_bill(**kwargs):
             meter_no = kwargs.get('meter_no')
-            bill = Bill.objects.filter(meter__meter_no=meter_no).first()
+            if not meter_no:
+                return  JsonResponse({'message': 'meter_no is required', 'code': '400'})
+
             try:
+                meter = Meter.objects.filter(meter_no=meter_no).first()
+                if not meter:
+                    return JsonResponse({'message': 'Meter not found', 'code': '404'})
+                bill = Bill.objects.filter(meter=meter).first()
+
                 if not bill:
-                    return {'message': "Bill not found"}
+                    return JsonResponse({'message': 'Bill not found', 'code': '404'})
 
                 data_bill = {"id_no": bill.meter.customer.id_no,
                              "first_name": bill.meter.customer.first_name,
@@ -176,10 +192,10 @@ class Billed:
                              "payment_method": bill.payment_method
 
                              }
-                return {'message': data_bill}
+                return JsonResponse({'data': data_bill, 'code': '200'})
             except Exception as ex:
                 print(ex)
-            return {'message': 'invalid'}
+                return JsonResponse({'message': 'Error occurred while reading bill', 'code': '500'})
 
     def generate_bill(**data):
         # TODO: Add exception handling
@@ -189,7 +205,7 @@ class Billed:
         previous_reading = data.get('previous_reading')
         unit_cost = 25
         meter = data.get('meter')
-        units = current_reading - previous_reading
+        units = int(current_reading) - int(previous_reading)
         total_cost = units * unit_cost
         return total_cost
 
@@ -197,14 +213,12 @@ class Billed:
 class Paying:
 
     def generate_receipt(**kwargs):
-        print("huhuh")
         try:
             bill_id = kwargs.get('bill_id')
             bill = Bill.objects.get(uuid=bill_id)
             payment_date = datetime.datetime.now()
-            print(bill)
             if not bill:
-                return {'message': "bill not existing"}
+                return JsonResponse({'message': 'Bill not found', 'code': '404'})
             receipt_information= {
                 "bill": bill,
                 "payment_method_used": bill.payment_method,
@@ -225,13 +239,12 @@ class Paying:
                  "payment_date": payment_date,
                  "status": Status.objects.get(name="Paid").name
             }
-            print(receipt_info)
             receipt=Receipt.objects.create(**receipt_information)
-            print(receipt)
-            return {'message': receipt_info}
+            if not receipt:
+                return JsonResponse({'message': 'Receipt not created', 'code': '404'})
+            return JsonResponse({'data': receipt_info, 'code': '201'})
         except Exception as e:
-            print(e)
-        return {'message':'Invalid'}
+            return JsonResponse({'error': 'Error occurred while creating receipt', 'code': '500'})
 
     def read_receipt(**kwargs):
         transaction_id = kwargs.get('transaction_id')
@@ -241,7 +254,7 @@ class Paying:
                 pay_info={
                  'balance': pay.balance,
                  'payment_date': pay.payment_date,
-                 ' payment_method_used': Receipt.payment_method_used
+                 'payment_method_used': Receipt.payment_method_used
                 }
                 return {'message':pay_info}
             except Exception as e:
