@@ -3,7 +3,11 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.10 (electricity_management)" />
   </component>
+<<<<<<< HEAD
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (electricity_management)" project-jdk-type="Python SDK" />
+=======
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.9 (gladBackend)" project-jdk-type="Python SDK" />
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
   <component name="PyCharmProfessionalAdvertiser">
     <option name="shown" value="true" />
   </component>

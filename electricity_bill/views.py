@@ -28,10 +28,12 @@ def create_customer(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
 
+
     try:
         data = clean_data(request)
         customer_data = Customer.customer_create(**data)
         return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
+
 
     except Exception as e:
         print(e)
@@ -82,62 +84,48 @@ def delete_customer(request):
     return JsonResponse({'message': 'Try again'})
 
 @authenticate_token
+
+@csrf_exempt
 def create_meter(request):
-    try:
-        data = clean_data(request)
-
-        return JsonResponse({'message': MeterFxn.meter_create(**data)})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully generated'})
+    data = clean_data(request)
+    response = MeterFxn.meter_create(**data)
+    return response
 
 
+@csrf_exempt
 def read_meter(request):
-    try:
-        data = clean_data(request)
-        meter = MeterFxn.meter_read(meter_no=data.get(meter_no='meter_no'))
-        return JsonResponse({"message": meter})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = MeterFxn.meter_read(**data)
+    return response
 
 
+@csrf_exempt
 def create_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse({'message': Billed.create_bill(**data)})
-    except Exception as ex:
-        print(ex)
-        return JsonResponse({'message': 'Unsuccessfully billed'})
+    data = clean_data(request)
+    response = Billed.create_bill(**data)
+    return response
 
 
+@csrf_exempt
 def read_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Billed.read_bill(**data))
-    except Exception as e:
-        print(e)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = Billed.read_bill(**data)
+    return response
 
 
+@csrf_exempt
 def receipt(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Paying.generate_receipt(**data))
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully'})
+    data = clean_data(request)
+    response = Paying.generate_receipt(**data)
+    return response
 
 
 def read_receipt(request):
-    try:
 
         data = clean_data(request)
-        payments = Paying.object.get(payment=data.get('transaction_id'))
-        return JsonResponse({"message": payments})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'invalid'})
+        response = Paying.read_receipt(**data)
+        return response
+
 
 
 @csrf_exempt

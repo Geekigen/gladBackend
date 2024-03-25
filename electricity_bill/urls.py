@@ -16,6 +16,10 @@ urlpatterns = [
     path('bill/create/', views.create_billing),
     path('bill/read/', views.read_billing),
     path('receipt/create/', views.receipt),
+<<<<<<< HEAD
     path('verifytoken/', views.verfyTokens)
+=======
+    path('receipt/read/', views.read_receipt)
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 ]
 
