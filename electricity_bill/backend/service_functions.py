@@ -1,15 +1,11 @@
 import datetime
 import json
-
-<<<<<<< HEAD
 import jwt
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-=======
 from django.http import JsonResponse
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 
 from electricity_management import settings
 from ..models import Bill, Meter, Role, Status, CustomUser, Receipt
@@ -163,11 +159,7 @@ class Billed:
         try:
             customer_id = kwargs.get('id_no')
             customer = CustomUser.objects.get(id_no=customer_id)
-<<<<<<< HEAD
-            meter = Meter.objects.filter(customer=customer).first()  # TODO: START HERE\
-=======
             meter = Meter.objects.filter(customer=customer).first()
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 
             if meter:
                 bill_info = {
@@ -183,19 +175,6 @@ class Billed:
                 if not bill:
                     return JsonResponse({'message': 'Bill not created', 'code': '404'})
 
-<<<<<<< HEAD
-                return f"Bill: {bill} Created Successfully"
-        except Exception as e:
-            print(e)
-        return {'message': 'invalid'}
-
-    def read_bill(**kwargs):
-        meter_no = kwargs.get('meter_no')
-        bill = Bill.objects.filter(meter__meter_no=meter_no).first()
-        try:
-            if not bill:
-                return {'message': "Bill not found"}
-=======
                 return JsonResponse({'message': 'Bill created successfully', 'code': '201'})
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
@@ -216,35 +195,24 @@ class Billed:
 
                 if not bill:
                     return JsonResponse({'message': 'Bill not found', 'code': '404'})
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
-
-            data_bill = {"id_no": bill.meter.customer.id_no,
-                         "first_name": bill.meter.customer.first_name,
-                         "last_name": bill.meter.customer.last_name,
-                         "address": bill.meter.customer.address,
-                         "contacts_no": bill.meter.customer.contact_no,
-                         "role": bill.meter.customer.role.name,
-                         "status": bill.meter.customer.status.name,
-                         "reading_date": bill.reading_date,
-                         "previous_reading": bill.current_reading,
-                         "billing_date": bill.billing_date,
-                         "amount_paid": bill.amount_paid,
-                         "due_date": bill.due_date,
-                         "payment_method": bill.payment_method
-
-<<<<<<< HEAD
-                         }
-            return {'message': data_bill}
-        except Exception as ex:
-            print(ex)
-        return {'message': 'invalid'}
-=======
-                             }
+                data_bill = {"id_no": bill.meter.customer.id_no,
+                             "first_name": bill.meter.customer.first_name,
+                             "last_name": bill.meter.customer.last_name,
+                             "address": bill.meter.customer.address,
+                             "contacts_no": bill.meter.customer.contact_no,
+                             "role": bill.meter.customer.role.name,
+                             "status": bill.meter.customer.status.name,
+                             "reading_date": bill.reading_date,
+                             "previous_reading": bill.current_reading,
+                             "billing_date": bill.billing_date,
+                             "amount_paid": bill.amount_paid,
+                             "due_date": bill.due_date,
+                             "payment_method": bill.payment_method
+                  }
                 return JsonResponse({'data': data_bill, 'code': '200'})
             except Exception as ex:
                 print(ex)
                 return JsonResponse({'message': 'Error occurred while reading bill', 'code': '500'})
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 
     def generate_bill(**data):
         # TODO: Add exception handling
@@ -267,13 +235,9 @@ class Paying:
             bill = Bill.objects.get(uuid=bill_id)
             payment_date = datetime.datetime.now()
             if not bill:
-<<<<<<< HEAD
-                return {'message': "bill not existing"}
-            receipt_information = {
-=======
+
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
             receipt_information= {
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
                 "bill": bill,
                 "payment_method_used": bill.payment_method,
                 "amount_paid": bill.amount_paid,
@@ -293,39 +257,23 @@ class Paying:
                 "payment_date": payment_date,
                 "status": Status.objects.get(name="Paid").name
             }
-<<<<<<< HEAD
-            print(receipt_info)
-            receipt = Receipt.objects.create(**receipt_information)
-            print(receipt)
-            return {'message': receipt_info}
-        except Exception as e:
-            print(e)
-        return {'message': 'Invalid'}
-=======
+
             receipt=Receipt.objects.create(**receipt_information)
             if not receipt:
                 return JsonResponse({'message': 'Receipt not created', 'code': '404'})
             return JsonResponse({'data': receipt_info, 'code': '201'})
         except Exception as e:
             return JsonResponse({'error': 'Error occurred while creating receipt', 'code': '500'})
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
-
     def read_receipt(**kwargs):
         transaction_id = kwargs.get('transaction_id')
         pay = Receipt.objects.filter(transaction_id=transaction_id).first()
         if pay:
             try:
-<<<<<<< HEAD
-                pay_info = {
-                    'balance': pay.balance,
-                    'payment_date': pay.payment_date,
-                    ' payment_method_used': Receipt.payment_method_used
-=======
+
                 pay_info={
                  'balance': pay.balance,
                  'payment_date': pay.payment_date,
                  'payment_method_used': Receipt.payment_method_used
->>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
                 }
                 return {'message': pay_info}
             except Exception as e:
