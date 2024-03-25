@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
 #
 
@@ -28,11 +29,11 @@ def bill_generator(request):
 def create_customer(request):
     try:
 
-        #if request.user.is_authenticated:
+        # if request.user.is_authenticated:
         data = clean_data(request)
         return JsonResponse({Customer.customer_create(**data)})
-        #else:
-           # return JsonResponse({"error": "login required", "code": "401"})
+        # else:
+        # return JsonResponse({"error": "login required", "code": "401"})
     except Exception as e:
         print(e)
         return JsonResponse({"error": "Error occured while creating"})
@@ -77,62 +78,47 @@ def delete_customer(request):
     return JsonResponse({'message': 'Try again'})
 
 
+@csrf_exempt
 def create_meter(request):
-    try:
-        data = clean_data(request)
-
-        return JsonResponse({'message': MeterFxn.meter_create(**data)})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully generated'})
+    data = clean_data(request)
+    response = MeterFxn.meter_create(**data)
+    return response
 
 
+@csrf_exempt
 def read_meter(request):
-    try:
-        data = clean_data(request)
-        meter = MeterFxn.meter_read(meter_no=data.get(meter_no='meter_no'))
-        return JsonResponse({"message": meter})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = MeterFxn.meter_read(**data)
+    return response
 
 
+@csrf_exempt
 def create_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse({'message': Billed.create_bill(**data)})
-    except Exception as ex:
-        print(ex)
-        return JsonResponse({'message': 'Unsuccessfully billed'})
+    data = clean_data(request)
+    response = Billed.create_bill(**data)
+    return response
 
 
+@csrf_exempt
 def read_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Billed.read_bill(**data))
-    except Exception as e:
-        print(e)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = Billed.read_bill(**data)
+    return response
 
 
+@csrf_exempt
 def receipt(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Paying.generate_receipt(**data))
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully'})
+    data = clean_data(request)
+    response = Paying.generate_receipt(**data)
+    return response
 
 
 def read_receipt(request):
-    try:
 
         data = clean_data(request)
-        payments = Paying.object.get(payment=data.get('transaction_id'))
-        return JsonResponse({"message": payments})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'invalid'})
+        response = Paying.read_receipt(**data)
+        return response
+
 
 
 def user_login(request):
@@ -147,7 +133,7 @@ def user_login(request):
 def logout_view(request):
     try:
         response_data = OAuth.logout_user(request)
-        return JsonResponse({"message":response_data})
+        return JsonResponse({"message": response_data})
     except Exception as ex:
         print(ex)
         response_data = {'error': 'logout error'}
