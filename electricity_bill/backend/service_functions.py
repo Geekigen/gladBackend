@@ -53,7 +53,6 @@ class Customer:
             return JsonResponse({'response_status': 'success', 'data': data})
 
         except Exception as e:
-            print(e)
             return JsonResponse({'message': 'Error occurred while creating customer', 'code': '500'})
 
     def customer_read(**kwargs):
@@ -99,7 +98,6 @@ class Customer:
             CustomUser.objects.filter(id_no=id_no).update(**kwargs)
             return JsonResponse({'message': 'Customer updated successfully', 'code': '200'})
         except Exception as ex:
-            print(ex)
             return JsonResponse({'message': 'Error Occurred', 'code': '500'})
 
     def get_all_customers(self):
@@ -113,7 +111,6 @@ class Customer:
 
             return JsonResponse({'data': all_customers, 'code': '200'})
         except Exception as ex:
-            print(ex)
             return JsonResponse({'message': 'Error occurred while fetching customers', 'code': '500'})
 
 
@@ -148,7 +145,6 @@ class MeterFxn:
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
-            print(e)
             return JsonResponse({'error': 'Error occurred while reading meter', 'code': '500'})
 
 
@@ -177,7 +173,6 @@ class Billed:
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
-            print(e)
             return JsonResponse({'error': 'Error occurred while creating bill', 'code': '500'})
 
     def read_bill(**kwargs):
@@ -212,7 +207,6 @@ class Billed:
             return JsonResponse({'data': data_bill, 'code': '200'})
 
         except Exception as ex:
-            print(ex)
             return JsonResponse({'message': 'Error occurred while reading bill', 'code': '500'})
 
     def generate_bill(**data):
@@ -268,21 +262,38 @@ class Paying:
             return JsonResponse({'error': 'Error occurred while creating receipt', 'code': '500'})
 
     def read_receipt(**kwargs):
-        transaction_id = kwargs.get('transaction_id')
-        pay = Receipt.objects.filter(transaction_id=transaction_id).first()
-        if pay:
-            try:
+        try:
 
-                pay_info = {
-                    'balance': pay.balance,
+            bill_id = kwargs.get('bill_id')
+            bill = Bill.objects.get(uuid=bill_id)
+            if not bill:
+                return JsonResponse({'message': 'Bill not found', 'code': '404'})
+            pay = Receipt.objects.filter(bill_id=bill).first()
+            bill_data = {
+                "first_name": bill.meter.customer.first_name,
+                "last_name": bill.meter.customer.last_name,
+                "address": bill.meter.customer.address,
+                "contact_no": bill.meter.customer.contact_no,
+                "meter": bill.meter.meter_no,
+                "payment_method_used": bill.payment_method,
+                "amount_paid": bill.amount_paid,
+                "payment_date": bill.billing_date,
+
+            }
+            if not pay:
+                return JsonResponse({'message': 'Receipt not found', 'code': '404'})
+
+            pay_info = {
+                    'balance': pay.amount_paid,
                     'payment_date': pay.payment_date,
-                    'payment_method_used': Receipt.payment_method_used
+                    'payment_method_used': pay.payment_method_used,
+                    'bill': bill_data,
+                    'status': pay.status.name
 
-                }
-                return {'message': pay_info}
-            except Exception as e:
-                print(e)
-            return {'message': 'invalid'}
+                    }
+            return JsonResponse({'data': pay_info, 'code': '200'})
+        except Exception as e:
+            return JsonResponse({'error': 'Error occurred while reading receipt', 'code': '500'})
 
 
 class OAuth:
