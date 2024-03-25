@@ -15,6 +15,7 @@ urlpatterns = [
     path('meter/read/', views.read_meter),
     path('bill/create/', views.create_billing),
     path('bill/read/', views.read_billing),
-    path('receipt/create/', views.receipt)
+    path('receipt/create/', views.receipt),
+    path('verifytoken/', views.verfyTokens)
 ]
 

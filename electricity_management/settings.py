@@ -118,3 +118,6 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'electricity_bill.CustomUser'
+JWT_SECRET = "1JtGGhyW"
+JWT_EXP = 360000
+JWT_ALGORITHM = 'HS256'
