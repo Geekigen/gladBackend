@@ -1,21 +1,22 @@
-import datetime
+from datetime import datetime, timedelta
 import json
 
+<<<<<<< HEAD
+import jwt
+=======
 from django.contrib.auth.decorators import login_required
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 from django.views.decorators.csrf import csrf_exempt
 
-#
+from electricity_management import settings
+from .backend.apitokenhandler import handleToken
+from .backend.validatejwt import authenticate_token
 
 from .models import CustomUser, Meter, Bill, Receipt
 from django.http import JsonResponse
 from electricity_bill.backend.service_functions import Customer, MeterFxn, Billed, Paying, OAuth
 from utils import clean_data
-from django.shortcuts import redirect
-from django.contrib.auth import logout
-from django.contrib.auth.models import User
-
-
-# Create your views here.
+from django.contrib.auth import logout, authenticate, login
 
 
 def bill_generator(request):
@@ -26,26 +27,41 @@ def bill_generator(request):
         print(e)
 
 
+@csrf_exempt
 def create_customer(request):
-    try:
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
 
+<<<<<<< HEAD
+    try:
+        data = clean_data(request)
+        customer_data = Customer.customer_create(**data)
+        return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
+
+=======
         # if request.user.is_authenticated:
         data = clean_data(request)
         return JsonResponse({Customer.customer_create(**data)})
         # else:
         # return JsonResponse({"error": "login required", "code": "401"})
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
     except Exception as e:
         print(e)
-        return JsonResponse({"error": "Error occured while creating"})
+        return JsonResponse({"error": "Error creating customer"}, status=400)
 
 
 def update_customer(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
+
     try:
         data = clean_data(request)
-        return JsonResponse(Customer.customer_update(**data))
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({"message": "invalid user"})
+        customer_data = Customer.customer_update(**data)
+        return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({"error": "Error creating customer"}, status=400)
 
 
 def read_customer(request):
@@ -77,8 +93,12 @@ def delete_customer(request):
         print(ex)
     return JsonResponse({'message': 'Try again'})
 
+<<<<<<< HEAD
+@authenticate_token
+=======
 
 @csrf_exempt
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 def create_meter(request):
     data = clean_data(request)
     response = MeterFxn.meter_create(**data)
@@ -121,13 +141,32 @@ def read_receipt(request):
 
 
 
+@csrf_exempt
 def user_login(request):
-    try:
-        response_data = OAuth.user_login(request)
-    except Exception as ex:
-        print(ex)
-        response_data = {'error': 'login_error'}
-    return JsonResponse(response_data)
+    data = json.loads(request.body)
+    print(data)
+    username = data.get('username')
+    password = data.get('password')
+
+    if not all([username, password]):
+        return JsonResponse({'status': 'Missing username or password'}, status=400)
+    user = CustomUser.objects.get(username=username)
+    print(user)
+
+    print(user)
+    if user is None:
+        return JsonResponse({'status': 'Invalid credentials'}, status=400)
+
+    login(request, user)
+
+    payload = {
+        'user_id': user.username,
+        'exp': datetime.now() + timedelta(minutes=settings.JWT_EXP),
+        'iat': datetime.now()
+    }
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+    return JsonResponse({'message': 'logged in', 'token': token})
 
 
 def logout_view(request):
@@ -138,3 +177,14 @@ def logout_view(request):
         print(ex)
         response_data = {'error': 'logout error'}
         return JsonResponse(response_data)
+
+
+@csrf_exempt
+def verfyTokens(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        token = data.get('token')
+        response = handleToken(token)
+        return response
+    else:
+        return JsonResponse({"Message": 'invalid request '})
