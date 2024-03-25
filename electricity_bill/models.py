@@ -49,7 +49,7 @@ class CustomUser(AbstractUser):
 
 
     def __str__(self):
-        return self.id_no
+        return f"{self.first_name}  {self.last_name}"
 
 
 class Meter(Basemodel):

@@ -28,63 +28,46 @@ def create_customer(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
 
-
-    try:
-        data = clean_data(request)
-        customer_data = Customer.customer_create(**data)
-        return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
+    data = clean_data(request)
+    response = Customer.customer_create(**data)
+    return response
 
 
-    except Exception as e:
-        print(e)
-        return JsonResponse({"error": "Error creating customer"}, status=400)
-
-
+@csrf_exempt
+@authenticate_token
 def update_customer(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
 
-    try:
-        data = clean_data(request)
-        customer_data = Customer.customer_update(**data)
-        return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
-
-    except Exception as e:
-        print(e)
-        return JsonResponse({"error": "Error creating customer"}, status=400)
+    data = clean_data(request)
+    response = Customer.customer_update(**data)
+    return response
 
 
+@csrf_exempt
+@authenticate_token
 def read_customer(request):
-    try:
-        data = clean_data(request)
-        customer = Customer.customer_read(id_no=data.get('id_no'))
-        return JsonResponse({'customer data': customer})
-    except Exception as y:
-        print(y)
-    return JsonResponse({'customer data': 'Invalid'})
+    data = clean_data(request)
+    response = Customer.customer_read(id_no=data.get('id_no'))
+    return response
 
 
+@csrf_exempt
+@authenticate_token
 def get_all_customers(request):
-    try:
-        customers = Customer.get_all_customers(request)
-        print(customers)
-        return JsonResponse({'data': customers})
-    except Exception as y:
-        print(y)
-    return JsonResponse({'customer data': 'Invalid'})
+    response = Customer.get_all_customers(request)
+    return response
 
 
+@csrf_exempt
+@authenticate_token
 def delete_customer(request):
-    try:
-        data = clean_data(request)
-        customer = Customer.customer_delete(**data)
-        return JsonResponse({'message': 'Customer deleted successfully'})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Try again'})
+    data = clean_data(request)
+    response = Customer.customer_delete(**data)
+    return response
+
 
 @authenticate_token
-
 @csrf_exempt
 def create_meter(request):
     data = clean_data(request)
@@ -92,6 +75,7 @@ def create_meter(request):
     return response
 
 
+@authenticate_token
 @csrf_exempt
 def read_meter(request):
     data = clean_data(request)
@@ -100,6 +84,7 @@ def read_meter(request):
 
 
 @csrf_exempt
+@authenticate_token
 def create_billing(request):
     data = clean_data(request)
     response = Billed.create_bill(**data)
@@ -107,6 +92,7 @@ def create_billing(request):
 
 
 @csrf_exempt
+@authenticate_token
 def read_billing(request):
     data = clean_data(request)
     response = Billed.read_bill(**data)
@@ -114,18 +100,19 @@ def read_billing(request):
 
 
 @csrf_exempt
+@authenticate_token
 def receipt(request):
     data = clean_data(request)
     response = Paying.generate_receipt(**data)
     return response
 
 
+@csrf_exempt
+@authenticate_token
 def read_receipt(request):
-
-        data = clean_data(request)
-        response = Paying.read_receipt(**data)
-        return response
-
+    data = clean_data(request)
+    response = Paying.read_receipt(**data)
+    return response
 
 
 @csrf_exempt
@@ -147,7 +134,7 @@ def user_login(request):
     login(request, user)
 
     payload = {
-        'user_id': user.username,
+        'user_id': user.id_no,
         'exp': datetime.now() + timedelta(minutes=settings.JWT_EXP),
         'iat': datetime.now()
     }
