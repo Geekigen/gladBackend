@@ -8,6 +8,7 @@ urlpatterns = [
     path('logout/', views.logout_view),
     path('customers/create/', views.create_customer),
     path('customers/update/', views.update_customer),
+    path('customers/delete/', views.delete_customer),
     path('customers/read/', views.read_customer),
     path('customers/get_all/', views.get_all_customers),
     path('customers/delete/', views.delete_customer),

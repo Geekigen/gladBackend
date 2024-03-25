@@ -4,8 +4,6 @@ import jwt
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 
 from electricity_management import settings
 from ..models import Bill, Meter, Role, Status, CustomUser, Receipt
@@ -22,7 +20,7 @@ class Customer:
             status = kwargs.get('status')
 
             if not all([role, status, kwargs.get('username'), kwargs.get('password')]):
-                return {"response_status": "error", "message": "Missing required fields"}
+                return JsonResponse({'message': 'Missing required fields', 'code': '400'})
 
             # Get role and status objects (avoid redundant lookups)
             role_obj = get_object_or_404(Role, name=role)
@@ -52,16 +50,18 @@ class Customer:
                 "role": role,  # Include role and status names
                 "status": status,
             }
-            return {"response_status": "success", "code": "200", "data": data}
+            return JsonResponse({'response_status': 'success', 'data': data})
 
         except Exception as e:
             print(e)
-            return {"response_status": "error", "data": "Error creating customer"}
+            return JsonResponse({'message': 'Error occurred while creating customer', 'code': '500'})
 
     def customer_read(**kwargs):
         try:
             id_no = kwargs.get('id_no')
             customer = CustomUser.objects.get(id_no=id_no)
+            if not customer:
+                return JsonResponse({'message': 'Customer not found', 'code': '404'})
             data = {"first_name": customer.first_name,
                     'last_name': customer.last_name,
                     'address': customer.address,
@@ -69,53 +69,52 @@ class Customer:
                     'role': customer.role.name,
                     'status': customer.status.name,
                     }
-            return {"message": data}
+            return JsonResponse({'data': data})
         except Exception as ex:
-            print(ex)
-        return {'message': "invalid"}
+            return JsonResponse({'message': "Invalid Id", 'code': '500'})
 
     def customer_delete(**kwargs):
         try:
             id_no = kwargs.get('id_no')
             if not id_no:
-                return {"message": 'invalid customer'}
+                return JsonResponse({'message': 'Invalid is required', 'code': '400'})
             customer = CustomUser.objects.filter(id_no=kwargs.get('id_no'))
-            if customer:
-                customer.delete()
-                return {"message": 'successfully deleted'}
-            else:
-                return {"message": 'invalid customer'}
+            if not customer:
+                return JsonResponse({'message': 'Customer not found', 'code': '404'})
 
+            customer.delete()
+            return JsonResponse({'message': 'Customer deleted successfully', 'code': '200'})
         except Exception as ex:
-            print(ex)
-        return {'message': 'invalid'}
+            return JsonResponse({'message': 'Error Occurred', 'code': '500'})
 
     def customer_update(**kwargs):
         try:
             id_no = kwargs.get('id_no')
             if not id_no:
-                return {'message': 'invalid input'}
+                return JsonResponse({'message': 'Invalid is required', 'code': '400'})
             customer = CustomUser.objects.get(id_no=id_no)
             if not customer:
-                return {'message': 'invalid customer'}
+                return JsonResponse({'message': 'Customer not found', 'code': '404'})
+            kwargs.pop('token')
             CustomUser.objects.filter(id_no=id_no).update(**kwargs)
-            return {'message': 'successfully updated'}
+            return JsonResponse({'message': 'Customer updated successfully', 'code': '200'})
         except Exception as ex:
             print(ex)
-        return {'message': 'invalid input'}
+            return JsonResponse({'message': 'Error Occurred', 'code': '500'})
 
     def get_all_customers(self):
         try:
-            customer = CustomUser.objects.all().values("id_no", "first_name", "last_name", "contact_no")
-            if customer is None:
-                return {'message': 'No Customer'}
+            customers = CustomUser.objects.all().values("id_no", "first_name", "last_name", "contact_no", "address",
+                                                       "status__name", "role__name")
+            if customers is None:
+                return JsonResponse({'message': 'No customers found', 'code': '404'})
 
-            all_customers = list(customer)
+            all_customers = list(customers)
 
-            return {"message": all_customers}
+            return JsonResponse({'data': all_customers, 'code': '200'})
         except Exception as ex:
             print(ex)
-        return {'message': "invalid"}
+            return JsonResponse({'message': 'Error occurred while fetching customers', 'code': '500'})
 
 
 class MeterFxn:
@@ -130,10 +129,10 @@ class MeterFxn:
                 'meter_no': meter_no
             }
             Meter.objects.create(**meter_info)
-            return JsonResponse({'message': 'Meter created successfully','code': '201'})
+            return JsonResponse({'message': 'Meter created successfully', 'code': '201'})
         except Exception as ex:
 
-            return JsonResponse({'error': 'Error occurred while creating meter','code': '500'})
+            return JsonResponse({'error': 'Error occurred while creating meter', 'code': '500'})
 
     def meter_read(**kwargs):
         try:
@@ -144,13 +143,13 @@ class MeterFxn:
                     "customer": meter.customer.id_no,
                     "meter_no": meter.meter_no,
                     "installation_date": meter.installation_date
-                    }
+                }
                 return JsonResponse({'data': data, 'code': '200'})
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
             print(e)
-            return JsonResponse({'error': 'Error occurred while reading meter','code': '500'})
+            return JsonResponse({'error': 'Error occurred while reading meter', 'code': '500'})
 
 
 class Billed:
@@ -174,7 +173,6 @@ class Billed:
 
                 if not bill:
                     return JsonResponse({'message': 'Bill not created', 'code': '404'})
-
                 return JsonResponse({'message': 'Bill created successfully', 'code': '201'})
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
@@ -183,36 +181,39 @@ class Billed:
             return JsonResponse({'error': 'Error occurred while creating bill', 'code': '500'})
 
     def read_bill(**kwargs):
-            meter_no = kwargs.get('meter_no')
-            if not meter_no:
-                return  JsonResponse({'message': 'meter_no is required', 'code': '400'})
+        meter_no = kwargs.get('meter_no')
+        if not meter_no:
+            return JsonResponse({'message': 'meter_no is required', 'code': '400'})
 
-            try:
-                meter = Meter.objects.filter(meter_no=meter_no).first()
-                if not meter:
-                    return JsonResponse({'message': 'Meter not found', 'code': '404'})
-                bill = Bill.objects.filter(meter=meter).first()
+        try:
+            meter = Meter.objects.filter(meter_no=meter_no).first()
+            if not meter:
+                return JsonResponse({'message': 'Meter not found', 'code': '404'})
+            bill = Bill.objects.filter(meter=meter).first()
 
-                if not bill:
-                    return JsonResponse({'message': 'Bill not found', 'code': '404'})
-                data_bill = {"id_no": bill.meter.customer.id_no,
-                             "first_name": bill.meter.customer.first_name,
-                             "last_name": bill.meter.customer.last_name,
-                             "address": bill.meter.customer.address,
-                             "contacts_no": bill.meter.customer.contact_no,
-                             "role": bill.meter.customer.role.name,
-                             "status": bill.meter.customer.status.name,
-                             "reading_date": bill.reading_date,
-                             "previous_reading": bill.current_reading,
-                             "billing_date": bill.billing_date,
-                             "amount_paid": bill.amount_paid,
-                             "due_date": bill.due_date,
-                             "payment_method": bill.payment_method
-                  }
-                return JsonResponse({'data': data_bill, 'code': '200'})
-            except Exception as ex:
-                print(ex)
-                return JsonResponse({'message': 'Error occurred while reading bill', 'code': '500'})
+
+            if not bill:
+                return JsonResponse({'message': 'Bill not found', 'code': '404'})
+
+            data_bill = {"id_no": bill.meter.customer.id_no,
+                         "first_name": bill.meter.customer.first_name,
+                         "last_name": bill.meter.customer.last_name,
+                         "address": bill.meter.customer.address,
+                         "contacts_no": bill.meter.customer.contact_no,
+                         "role": bill.meter.customer.role.name,
+                         "status": bill.meter.customer.status.name,
+                         "reading_date": bill.reading_date,
+                         "previous_reading": bill.current_reading,
+                         "billing_date": bill.billing_date,
+                         "amount_paid": bill.amount_paid,
+                         "due_date": bill.due_date,
+                         "payment_method": bill.payment_method
+                         }
+            return JsonResponse({'data': data_bill, 'code': '200'})
+
+        except Exception as ex:
+            print(ex)
+            return JsonResponse({'message': 'Error occurred while reading bill', 'code': '500'})
 
     def generate_bill(**data):
         # TODO: Add exception handling
@@ -237,7 +238,8 @@ class Paying:
             if not bill:
 
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
-            receipt_information= {
+            receipt_information = {
+
                 "bill": bill,
                 "payment_method_used": bill.payment_method,
                 "amount_paid": bill.amount_paid,
@@ -257,23 +259,25 @@ class Paying:
                 "payment_date": payment_date,
                 "status": Status.objects.get(name="Paid").name
             }
+            receipt = Receipt.objects.create(**receipt_information)
 
-            receipt=Receipt.objects.create(**receipt_information)
             if not receipt:
                 return JsonResponse({'message': 'Receipt not created', 'code': '404'})
             return JsonResponse({'data': receipt_info, 'code': '201'})
         except Exception as e:
             return JsonResponse({'error': 'Error occurred while creating receipt', 'code': '500'})
+
     def read_receipt(**kwargs):
         transaction_id = kwargs.get('transaction_id')
         pay = Receipt.objects.filter(transaction_id=transaction_id).first()
         if pay:
             try:
 
-                pay_info={
-                 'balance': pay.balance,
-                 'payment_date': pay.payment_date,
-                 'payment_method_used': Receipt.payment_method_used
+                pay_info = {
+                    'balance': pay.balance,
+                    'payment_date': pay.payment_date,
+                    'payment_method_used': Receipt.payment_method_used
+
                 }
                 return {'message': pay_info}
             except Exception as e:
@@ -311,7 +315,7 @@ class OAuth:
         login(request, user)
 
         payload = {
-            'user_id': user.id,  # Use user ID instead of UUID for JWT standard
+            'user_id': user.id_no,  # Use user ID instead of UUID for JWT standard
             'exp': datetime.now() + datetime.timedelta(minutes=settings.JWT_EXP),
             'iat': datetime.now()
         }

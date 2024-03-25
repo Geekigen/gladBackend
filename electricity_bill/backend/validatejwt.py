@@ -18,7 +18,7 @@ def authenticate_token(view_func):
         try:
             payload = jwt.decode(token, settings.JWT_SECRET, algorithms=['HS256'])
             user_id = payload['user_id']
-            user = CustomUser.objects.get(uuid=user_id)
+            user = CustomUser.objects.get(id_no=user_id)
             request.user = user
             return view_func(request, *args, **kwargs)
         except jwt.ExpiredSignatureError:
