@@ -72,7 +72,7 @@ class Bill(Basemodel):
     meter = models.ForeignKey(Meter, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.meter)
+        return str(self.uuid)
 
 
 class Receipt(Basemodel):

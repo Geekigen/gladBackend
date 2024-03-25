@@ -1,7 +1,11 @@
 from datetime import datetime, timedelta
 import json
 
+<<<<<<< HEAD
 import jwt
+=======
+from django.contrib.auth.decorators import login_required
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 from django.views.decorators.csrf import csrf_exempt
 
 from electricity_management import settings
@@ -28,11 +32,19 @@ def create_customer(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid request method. Use POST'}, status=400)
 
+<<<<<<< HEAD
     try:
         data = clean_data(request)
         customer_data = Customer.customer_create(**data)
         return JsonResponse({"response_status": "success", "code": 200, "data": customer_data})
 
+=======
+        # if request.user.is_authenticated:
+        data = clean_data(request)
+        return JsonResponse({Customer.customer_create(**data)})
+        # else:
+        # return JsonResponse({"error": "login required", "code": "401"})
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
     except Exception as e:
         print(e)
         return JsonResponse({"error": "Error creating customer"}, status=400)
@@ -81,63 +93,52 @@ def delete_customer(request):
         print(ex)
     return JsonResponse({'message': 'Try again'})
 
+<<<<<<< HEAD
 @authenticate_token
+=======
+
+@csrf_exempt
+>>>>>>> 90d5c653b84b484cb90c70693a28f63a1791c4f5
 def create_meter(request):
-    try:
-        data = clean_data(request)
-
-        return JsonResponse({'message': MeterFxn.meter_create(**data)})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully generated'})
+    data = clean_data(request)
+    response = MeterFxn.meter_create(**data)
+    return response
 
 
+@csrf_exempt
 def read_meter(request):
-    try:
-        data = clean_data(request)
-        meter = MeterFxn.meter_read(meter_no=data.get(meter_no='meter_no'))
-        return JsonResponse({"message": meter})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = MeterFxn.meter_read(**data)
+    return response
 
 
+@csrf_exempt
 def create_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse({'message': Billed.create_bill(**data)})
-    except Exception as ex:
-        print(ex)
-        return JsonResponse({'message': 'Unsuccessfully billed'})
+    data = clean_data(request)
+    response = Billed.create_bill(**data)
+    return response
 
 
+@csrf_exempt
 def read_billing(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Billed.read_bill(**data))
-    except Exception as e:
-        print(e)
-    return JsonResponse({"message": "invalid"})
+    data = clean_data(request)
+    response = Billed.read_bill(**data)
+    return response
 
 
+@csrf_exempt
 def receipt(request):
-    try:
-        data = clean_data(request)
-        return JsonResponse(Paying.generate_receipt(**data))
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'Unsuccessfully'})
+    data = clean_data(request)
+    response = Paying.generate_receipt(**data)
+    return response
 
 
 def read_receipt(request):
-    try:
 
         data = clean_data(request)
-        payments = Paying.object.get(payment=data.get('transaction_id'))
-        return JsonResponse({"message": payments})
-    except Exception as ex:
-        print(ex)
-    return JsonResponse({'message': 'invalid'})
+        response = Paying.read_receipt(**data)
+        return response
+
 
 
 @csrf_exempt
