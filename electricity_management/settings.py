@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-%^-=aum0wb!s0!4qh5m45eqc*wl8hz(u1egtdiiqt0xi6#ehdd
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
+
 # Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'corsheaders',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
@@ -45,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'electricity_management.urls'
@@ -66,7 +69,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'electricity_management.wsgi.application'
-
+CORS_ORIGIN_ALLOW_ALL = True
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
