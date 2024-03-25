@@ -140,7 +140,14 @@ def user_login(request):
     }
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
-    return JsonResponse({'message': 'logged in', 'token': token})
+    user = {'id': user.id_no,
+            'username': user.username,
+            'email': user.email,
+            'phone': user.contact_no,
+            'role': user.role.name,
+            'status': user.status.name}
+
+    return JsonResponse({'token': token, 'user': user, 'code': '200', 'message': 'Login successful'})
 
 
 def logout_view(request):
