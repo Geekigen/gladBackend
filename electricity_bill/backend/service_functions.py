@@ -1,6 +1,5 @@
 import datetime
 import json
-
 import jwt
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
@@ -192,6 +191,7 @@ class Billed:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
             bill = Bill.objects.filter(meter=meter).first()
 
+
             if not bill:
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
 
@@ -236,8 +236,10 @@ class Paying:
             bill = Bill.objects.get(uuid=bill_id)
             payment_date = datetime.datetime.now()
             if not bill:
+
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
             receipt_information = {
+
                 "bill": bill,
                 "payment_method_used": bill.payment_method,
                 "amount_paid": bill.amount_paid,
@@ -258,6 +260,7 @@ class Paying:
                 "status": Status.objects.get(name="Paid").name
             }
             receipt = Receipt.objects.create(**receipt_information)
+
             if not receipt:
                 return JsonResponse({'message': 'Receipt not created', 'code': '404'})
             return JsonResponse({'data': receipt_info, 'code': '201'})
@@ -269,10 +272,12 @@ class Paying:
         pay = Receipt.objects.filter(transaction_id=transaction_id).first()
         if pay:
             try:
+
                 pay_info = {
                     'balance': pay.balance,
                     'payment_date': pay.payment_date,
                     'payment_method_used': Receipt.payment_method_used
+
                 }
                 return {'message': pay_info}
             except Exception as e:
