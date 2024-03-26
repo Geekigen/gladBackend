@@ -69,7 +69,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'electricity_management.wsgi.application'
-CORS_ORIGIN_ALLOW_ALL = True
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -97,6 +96,9 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = ['http://localhost:3000']
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/

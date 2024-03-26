@@ -67,7 +67,7 @@ class Bill(Basemodel):
     current_reading = models.IntegerField(unique=False)
     billing_date = models.DateTimeField(auto_now_add=True, null=False, blank=False)
     amount_paid = models.IntegerField(blank=False, null=False)
-    due_date = models.DateTimeField(null=False, blank=False)
+    due_date = models.DateField(null=False, blank=False,default=None)
     payment_method = models.CharField(max_length=25, blank=False, null=False)
     meter = models.ForeignKey(Meter, on_delete=models.CASCADE)
 

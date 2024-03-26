@@ -120,7 +120,6 @@ def user_login(request):
     data = json.loads(request.body)
     username = data.get('username')
     password = data.get('password')
-
     if not all([username, password]):
         return JsonResponse({'status': 'Missing username or password'}, status=400)
     user = CustomUser.objects.get(username=username)

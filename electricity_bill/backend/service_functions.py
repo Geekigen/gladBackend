@@ -18,7 +18,6 @@ class Customer:
         try:
             role = kwargs.get('role')
             status = kwargs.get('status')
-
             if not all([role, status, kwargs.get('username'), kwargs.get('password')]):
                 return JsonResponse({'message': 'Missing required fields', 'code': '400'})
 
@@ -50,7 +49,7 @@ class Customer:
                 "role": role,  # Include role and status names
                 "status": status,
             }
-            return JsonResponse({'response_status': 'success', 'data': data})
+            return JsonResponse({'response_status': 'success', 'data': data,"code":"201"})
 
         except Exception as e:
             return JsonResponse({'message': 'Error occurred while creating customer', 'code': '500'})
@@ -103,7 +102,7 @@ class Customer:
     def get_all_customers(self):
         try:
             customers = CustomUser.objects.all().values("id_no", "first_name", "last_name", "contact_no", "address",
-                                                       "status__name", "role__name")
+                                                        "status__name", "role__name")
             if customers is None:
                 return JsonResponse({'message': 'No customers found', 'code': '404'})
 
@@ -111,6 +110,7 @@ class Customer:
 
             return JsonResponse({'data': all_customers, 'code': '200'})
         except Exception as ex:
+            print("This is the Error", str(ex))
             return JsonResponse({'message': 'Error occurred while fetching customers', 'code': '500'})
 
 
@@ -166,6 +166,7 @@ class Billed:
                 }
                 bill_info["amount_paid"] = Billed.generate_bill(**bill_info)
                 bill = Bill.objects.create(**bill_info)
+                bill.save()
 
                 if not bill:
                     return JsonResponse({'message': 'Bill not created', 'code': '404'})
@@ -173,6 +174,7 @@ class Billed:
             else:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
         except Exception as e:
+            print("********", str(e))
             return JsonResponse({'error': 'Error occurred while creating bill', 'code': '500'})
 
     def read_bill(**kwargs):
@@ -185,7 +187,6 @@ class Billed:
             if not meter:
                 return JsonResponse({'message': 'Meter not found', 'code': '404'})
             bill = Bill.objects.filter(meter=meter).first()
-
 
             if not bill:
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
@@ -230,7 +231,6 @@ class Paying:
             bill = Bill.objects.get(uuid=bill_id)
             payment_date = datetime.datetime.now()
             if not bill:
-
                 return JsonResponse({'message': 'Bill not found', 'code': '404'})
             receipt_information = {
 
@@ -284,13 +284,13 @@ class Paying:
                 return JsonResponse({'message': 'Receipt not found', 'code': '404'})
 
             pay_info = {
-                    'balance': pay.amount_paid,
-                    'payment_date': pay.payment_date,
-                    'payment_method_used': pay.payment_method_used,
-                    'bill': bill_data,
-                    'status': pay.status.name
+                'balance': pay.amount_paid,
+                'payment_date': pay.payment_date,
+                'payment_method_used': pay.payment_method_used,
+                'bill': bill_data,
+                'status': pay.status.name
 
-                    }
+            }
             return JsonResponse({'data': pay_info, 'code': '200'})
         except Exception as e:
             return JsonResponse({'error': 'Error occurred while reading receipt', 'code': '500'})
